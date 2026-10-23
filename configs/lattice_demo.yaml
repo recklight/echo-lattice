@@ -1,0 +1,14 @@
+# Lattice inversion on synthetic planar rooms measured with every image order, a new
+# source bearing for every recording and 4 ms of playback latency on the microphone channel.
+data:
+  dataset: data/lattice/dataset.csv
+synthetic:
+  n_rooms_per_class: 4          # 8 rooms, 24 recordings
+  source_bearing_deg: null      # a new bearing for every recording
+  latency_ms: 4.0               # the microphone channel lags the excitation by 4 ms
+acoustics:
+  max_order: 4                  # every image a real room produces within the first 100 ms
+  reflection: 0.85
+  delay: fractional             # arrivals between samples, as in a real measurement
+inversion:
+  method: lattice
