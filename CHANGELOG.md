@@ -19,6 +19,8 @@
 - `pick_arrivals`：從直達聲開始依時間順序撿出所有高於門檻的回音，給晶格反解使用。
 - 設定新增 `inversion.method` 與 `lattice` 區段；`room.size_m` 可以給三個邊長（只限晶格反解）；`synthetic.latency_ms` 讓模擬錄音的麥克風聲道落後激勵聲道；`synthetic.source_bearing_deg: null` 讓每次量測重新抽聲源方位角。
 - `configs/lattice_demo.yaml`，以及範例 `examples/benchmark_lattice_inversion.py`：隨機房間上晶格反解與一階反解的比較。
+- `paper/`：晶格反解的論文，繁體中文版與英文版，以 CC BY 4.0 授權。論文在模擬房間與公開資料集 dEchorate 的量測響應上評估晶格反解；它在 540 筆量測響應上全部失敗，論文第 5.7 節與附錄 E 診斷了原因。
+- `experiments/`：論文各實驗的腳本，包括模擬實驗 E1–E9、dEchorate 量測的 E10、審查後新增的分析 PR1–PR12、量測失敗的診斷 PR13，以及凍結檔 `freeze.json` 的副本。資料與結果不在 repository 裡，`experiments/README.md` 說明資料從哪裡下載、腳本怎麼執行。
 
 ---
 

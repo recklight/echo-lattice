@@ -22,6 +22,9 @@ data/*
 outputs/*
 !outputs/.gitkeep
 examples/output/
+# Results and extracted responses of the paper's experiments stay local.
+experiments/**/results/
+experiments/**/data/
 *.wav
 *.mat
 *.dat

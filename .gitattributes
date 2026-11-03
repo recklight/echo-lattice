@@ -16,3 +16,7 @@
 *.wav   binary
 *.joblib binary
 *.pt    binary
+*.pdf   binary
+
+# The freeze file keeps its original bytes: the paper gives its SHA-256.
+experiments/freeze.json -text

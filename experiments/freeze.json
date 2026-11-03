@@ -1,0 +1,981 @@
+{
+  "written_utc": "2026-10-23T08:43:22Z",
+  "code": {
+    "git_head": "1948ea0d3ee184fb6e1b0669bcc1e873b39b56c1",
+    "src_dirty": false,
+    "src_tree_sha256": "0f56aa32cc9a988bb8ce106c78943a2d8f2f01fcf71c497f03f5d2912be5203f",
+    "n_files": 28
+  },
+  "harness_sha256": "93cf88f67a04919362b7d132d81f9994d008715c9b25114cf56666a0b6763777",
+  "blueprint_sha256": "0170af446b09d1f1f72f6f92d568a823aeedac9df4b20b99707d0ce801b2bc18",
+  "freeze_script_sha256": "fa53354865d45c44baf61fbc75a4907b5aff376056ad17466b8ca70d74cd15a4",
+  "environment": {
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "packages": [
+      "annotated-doc==0.0.5",
+      "backports.tarfile==1.2.0",
+      "build==1.6.1",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.2",
+      "cloudpickle==3.1.2",
+      "colorama==0.4.6",
+      "contourpy==1.3.2",
+      "cycler==0.12.1",
+      "docutils==0.23",
+      "-e",
+      "git+https://github.com/recklight/echo-lattice.git@1948ea0d3ee184fb6e1b0669bcc1e873b39b56c1#egg=echo_lattice",
+      "exceptiongroup==1.3.1",
+      "fonttools==4.65.0",
+      "id==1.6.1",
+      "idna==3.20",
+      "importlib_metadata==9.0.1",
+      "iniconfig==2.3.1",
+      "jaraco.classes==3.4.0",
+      "jaraco.context==6.1.2",
+      "jaraco.functools==4.6.0",
+      "joblib==1.6.0",
+      "keyring==25.7.0",
+      "kiwisolver==1.5.1",
+      "markdown-it-py==4.2.0",
+      "matplotlib==3.10.9",
+      "mdurl==0.1.2",
+      "more-itertools==11.1.0",
+      "nh3==0.3.7",
+      "numpy==2.2.6",
+      "packaging==26.3",
+      "pandas==2.3.3",
+      "pillow==12.3.0",
+      "pluggy==1.6.0",
+      "Pygments==2.21.0",
+      "pyparsing==3.3.3",
+      "pyproject_hooks==1.3.3",
+      "pytest==9.1.1",
+      "python-dateutil==2.9.0.post0",
+      "pytz==2026.5",
+      "pywin32-ctypes==0.2.3",
+      "PyYAML==6.0.3",
+      "readme_renderer==46.0",
+      "requests==2.34.2",
+      "requests-toolbelt==1.0.0",
+      "rfc3986==2.0.0",
+      "rich==15.0.0",
+      "ruff==0.16.10",
+      "scikit-learn==1.7.2",
+      "scipy==1.15.3",
+      "shellingham==1.5.4",
+      "six==1.17.0",
+      "speechdsp==0.2.0",
+      "threadpoolctl==3.7.0",
+      "tomli==2.5.0",
+      "twine==7.0.0",
+      "typer==0.27.3",
+      "typing_extensions==4.16.0",
+      "tzdata==2026.5",
+      "urllib3==2.8.0",
+      "zipp==4.1.1"
+    ]
+  },
+  "constants": {
+    "master_seed": 20261024,
+    "success_m": 0.05,
+    "planar_overrides": {
+      "acoustics.max_order": 4,
+      "acoustics.reflection": 0.85,
+      "acoustics.delay": "fractional",
+      "inversion.method": "lattice"
+    },
+    "spatial_overrides": {
+      "acoustics.max_order": 5,
+      "acoustics.reflection": 0.85,
+      "acoustics.delay": "fractional",
+      "inversion.method": "lattice",
+      "acoustics.sample_rate": 48000,
+      "acoustics.rir_taps": 4800,
+      "identification.n_taps": 4800,
+      "identification.method": "least_squares",
+      "synthetic.duration_s": 1.0,
+      "lattice.dimensions": 3,
+      "lattice.max_order": 5,
+      "lattice.max_echoes": 120
+    },
+    "ablations": {
+      "A1_no_missed_term": {
+        "patched": [
+          "_batch_loglik",
+          "point_process_loglik"
+        ],
+        "overrides": {}
+      },
+      "A2_single_chain": {
+        "patched": [
+          "fit_lattice"
+        ],
+        "overrides": {}
+      },
+      "A3_no_polish": {
+        "patched": [
+          "_polish"
+        ],
+        "overrides": {}
+      },
+      "A4_no_rescan": {
+        "patched": [
+          "_rescan_axes"
+        ],
+        "overrides": {}
+      },
+      "A5_image_groups_only": {
+        "patched": [],
+        "overrides": {
+          "lattice.searches": [
+            "image_groups"
+          ]
+        }
+      },
+      "A6_axis_scan_only": {
+        "patched": [],
+        "overrides": {
+          "lattice.searches": [
+            "axis_scan"
+          ]
+        }
+      }
+    }
+  },
+  "configs": {
+    "planar": {
+      "sha256": "b463f1840a2ac7afe6945fe9ca2d248f7d61d1541957734ef68d9a164a92fd3e",
+      "values": {
+        "seed": 0,
+        "data": {
+          "dataset": "data/dataset.csv"
+        },
+        "synthetic": {
+          "class_names": [
+            "large",
+            "small"
+          ],
+          "room_sizes_m": [
+            [
+              10.7,
+              7.5
+            ],
+            [
+              3.5,
+              3.0
+            ]
+          ],
+          "room_jitter_m": 0.3,
+          "n_rooms_per_class": 8,
+          "n_recordings_per_room": 3,
+          "source_distance_range_m": [
+            0.8,
+            1.6
+          ],
+          "source_bearing_deg": 45.0,
+          "wall_margin_m": 0.3,
+          "excitation": "white",
+          "duration_s": 2.0,
+          "snr_db": 30.0,
+          "noise": "white",
+          "latency_ms": 0.0
+        },
+        "acoustics": {
+          "sample_rate": 16000,
+          "speed_of_sound_m_s": 343.0,
+          "temperature_c": null,
+          "max_order": 4,
+          "order_mode": "per_axis",
+          "reflection": 0.85,
+          "delay": "fractional",
+          "rir_taps": 1600
+        },
+        "room": {
+          "size_m": [
+            10.7,
+            7.5
+          ],
+          "microphone_m": [
+            5.35,
+            3.75
+          ],
+          "source_m": [
+            6.35,
+            4.75
+          ]
+        },
+        "identification": {
+          "method": "nlms",
+          "n_taps": 1600,
+          "step": 0.8,
+          "regularization": 1e-10,
+          "prune_threshold": 0.001
+        },
+        "echoes": {
+          "n_echoes": 9,
+          "method": "peaks",
+          "min_separation_taps": 3,
+          "relative_height": 0.02,
+          "interpolate": false,
+          "compensate_spreading": true
+        },
+        "inversion": {
+          "method": "lattice",
+          "source_bearing_deg": 45.0,
+          "rank_metric": "tap_match",
+          "tolerance_taps": 2.0,
+          "refine": true,
+          "max_candidates": 20
+        },
+        "lattice": {
+          "dimensions": 2,
+          "latency_ms": null,
+          "max_echoes": 40,
+          "relative_floor": 0.02,
+          "min_separation_taps": 2,
+          "max_order": 4,
+          "reflection": 0.8,
+          "clutter": 3.0,
+          "searches": null,
+          "n_latencies": 8,
+          "bearing_step_deg": 1.0,
+          "min_explained": null,
+          "max_missed": null
+        },
+        "sensitivity": {
+          "sweeps": [
+            "delay_offset",
+            "source_bearing",
+            "source_shift",
+            "snr"
+          ],
+          "delay_offsets_samples": [
+            0.0,
+            0.2,
+            0.5,
+            1.0,
+            2.0,
+            5.0,
+            10.0,
+            30.0
+          ],
+          "bearings_deg": [
+            5.0,
+            15.0,
+            25.0,
+            35.0,
+            45.0,
+            55.0,
+            65.0,
+            75.0,
+            85.0
+          ],
+          "shifts_m": [
+            -0.5,
+            -0.25,
+            -0.1,
+            0.0,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "snr_db": [
+            -5.0,
+            0.0,
+            5.0,
+            10.0,
+            20.0,
+            30.0
+          ],
+          "n_trials": 10
+        },
+        "denoising": {
+          "methods": [
+            "identity",
+            "linear",
+            "pca",
+            "mlp"
+          ],
+          "architectures": [
+            [
+              300,
+              300,
+              300
+            ]
+          ],
+          "activation": "logistic",
+          "n_epochs": 300,
+          "learning_rate": 0.001,
+          "batch_size": 32,
+          "weight_decay": 0.0001,
+          "n_components": 10,
+          "device": "cpu"
+        },
+        "features": {
+          "representation": "decay_curve",
+          "floor_db": -60.0,
+          "max_imfs": 6,
+          "emd_tolerance": 0.3
+        },
+        "model": {
+          "name": "svm",
+          "svm_c": 10.0,
+          "svm_gamma": "scale",
+          "n_neighbors": 5,
+          "tree_max_depth": null,
+          "template_tolerance_taps": 2.0,
+          "template_min_score": 0.7
+        },
+        "evaluation": {
+          "n_splits": 5,
+          "positive_class": "large"
+        },
+        "output": {
+          "root": "outputs",
+          "figure_format": "png",
+          "dpi": 150
+        }
+      }
+    },
+    "spatial": {
+      "sha256": "c356cc7af592ee9f6b5e12712850bf1736853813341697b4f84113951b17bd42",
+      "values": {
+        "seed": 0,
+        "data": {
+          "dataset": "data/dataset.csv"
+        },
+        "synthetic": {
+          "class_names": [
+            "large",
+            "small"
+          ],
+          "room_sizes_m": [
+            [
+              10.7,
+              7.5
+            ],
+            [
+              3.5,
+              3.0
+            ]
+          ],
+          "room_jitter_m": 0.3,
+          "n_rooms_per_class": 8,
+          "n_recordings_per_room": 3,
+          "source_distance_range_m": [
+            0.8,
+            1.6
+          ],
+          "source_bearing_deg": 45.0,
+          "wall_margin_m": 0.3,
+          "excitation": "white",
+          "duration_s": 1.0,
+          "snr_db": 30.0,
+          "noise": "white",
+          "latency_ms": 0.0
+        },
+        "acoustics": {
+          "sample_rate": 48000,
+          "speed_of_sound_m_s": 343.0,
+          "temperature_c": null,
+          "max_order": 5,
+          "order_mode": "per_axis",
+          "reflection": 0.85,
+          "delay": "fractional",
+          "rir_taps": 4800
+        },
+        "room": {
+          "size_m": [
+            10.7,
+            7.5
+          ],
+          "microphone_m": [
+            5.35,
+            3.75
+          ],
+          "source_m": [
+            6.35,
+            4.75
+          ]
+        },
+        "identification": {
+          "method": "least_squares",
+          "n_taps": 4800,
+          "step": 0.8,
+          "regularization": 1e-10,
+          "prune_threshold": 0.001
+        },
+        "echoes": {
+          "n_echoes": 9,
+          "method": "peaks",
+          "min_separation_taps": 3,
+          "relative_height": 0.02,
+          "interpolate": false,
+          "compensate_spreading": true
+        },
+        "inversion": {
+          "method": "lattice",
+          "source_bearing_deg": 45.0,
+          "rank_metric": "tap_match",
+          "tolerance_taps": 2.0,
+          "refine": true,
+          "max_candidates": 20
+        },
+        "lattice": {
+          "dimensions": 3,
+          "latency_ms": null,
+          "max_echoes": 120,
+          "relative_floor": 0.02,
+          "min_separation_taps": 2,
+          "max_order": 5,
+          "reflection": 0.8,
+          "clutter": 3.0,
+          "searches": null,
+          "n_latencies": 8,
+          "bearing_step_deg": 1.0,
+          "min_explained": null,
+          "max_missed": null
+        },
+        "sensitivity": {
+          "sweeps": [
+            "delay_offset",
+            "source_bearing",
+            "source_shift",
+            "snr"
+          ],
+          "delay_offsets_samples": [
+            0.0,
+            0.2,
+            0.5,
+            1.0,
+            2.0,
+            5.0,
+            10.0,
+            30.0
+          ],
+          "bearings_deg": [
+            5.0,
+            15.0,
+            25.0,
+            35.0,
+            45.0,
+            55.0,
+            65.0,
+            75.0,
+            85.0
+          ],
+          "shifts_m": [
+            -0.5,
+            -0.25,
+            -0.1,
+            0.0,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "snr_db": [
+            -5.0,
+            0.0,
+            5.0,
+            10.0,
+            20.0,
+            30.0
+          ],
+          "n_trials": 10
+        },
+        "denoising": {
+          "methods": [
+            "identity",
+            "linear",
+            "pca",
+            "mlp"
+          ],
+          "architectures": [
+            [
+              300,
+              300,
+              300
+            ]
+          ],
+          "activation": "logistic",
+          "n_epochs": 300,
+          "learning_rate": 0.001,
+          "batch_size": 32,
+          "weight_decay": 0.0001,
+          "n_components": 10,
+          "device": "cpu"
+        },
+        "features": {
+          "representation": "decay_curve",
+          "floor_db": -60.0,
+          "max_imfs": 6,
+          "emd_tolerance": 0.3
+        },
+        "model": {
+          "name": "svm",
+          "svm_c": 10.0,
+          "svm_gamma": "scale",
+          "n_neighbors": 5,
+          "tree_max_depth": null,
+          "template_tolerance_taps": 2.0,
+          "template_min_score": 0.7
+        },
+        "evaluation": {
+          "n_splits": 5,
+          "positive_class": "large"
+        },
+        "output": {
+          "root": "outputs",
+          "figure_format": "png",
+          "dpi": 150
+        }
+      }
+    },
+    "e10": {
+      "sha256": "e5b29f4aebab9a1454fdebe3f501114aec90d3e79ace19d174966b77d4aa6fa8",
+      "values": {
+        "seed": 0,
+        "data": {
+          "dataset": "data/dataset.csv"
+        },
+        "synthetic": {
+          "class_names": [
+            "large",
+            "small"
+          ],
+          "room_sizes_m": [
+            [
+              10.7,
+              7.5
+            ],
+            [
+              3.5,
+              3.0
+            ]
+          ],
+          "room_jitter_m": 0.3,
+          "n_rooms_per_class": 8,
+          "n_recordings_per_room": 3,
+          "source_distance_range_m": [
+            0.8,
+            1.6
+          ],
+          "source_bearing_deg": 45.0,
+          "wall_margin_m": 0.3,
+          "excitation": "white",
+          "duration_s": 1.0,
+          "snr_db": 30.0,
+          "noise": "white",
+          "latency_ms": 0.0
+        },
+        "acoustics": {
+          "sample_rate": 48000,
+          "speed_of_sound_m_s": 345.844,
+          "temperature_c": null,
+          "max_order": 5,
+          "order_mode": "per_axis",
+          "reflection": 0.85,
+          "delay": "fractional",
+          "rir_taps": 4800
+        },
+        "room": {
+          "size_m": [
+            10.7,
+            7.5
+          ],
+          "microphone_m": [
+            5.35,
+            3.75
+          ],
+          "source_m": [
+            6.35,
+            4.75
+          ]
+        },
+        "identification": {
+          "method": "least_squares",
+          "n_taps": 4800,
+          "step": 0.8,
+          "regularization": 1e-10,
+          "prune_threshold": 0.001
+        },
+        "echoes": {
+          "n_echoes": 9,
+          "method": "peaks",
+          "min_separation_taps": 3,
+          "relative_height": 0.02,
+          "interpolate": false,
+          "compensate_spreading": true
+        },
+        "inversion": {
+          "method": "lattice",
+          "source_bearing_deg": 45.0,
+          "rank_metric": "tap_match",
+          "tolerance_taps": 2.0,
+          "refine": true,
+          "max_candidates": 20
+        },
+        "lattice": {
+          "dimensions": 3,
+          "latency_ms": null,
+          "max_echoes": 120,
+          "relative_floor": 0.02,
+          "min_separation_taps": 2,
+          "max_order": 5,
+          "reflection": 0.8,
+          "clutter": 3.0,
+          "searches": null,
+          "n_latencies": 8,
+          "bearing_step_deg": 1.0,
+          "min_explained": null,
+          "max_missed": null
+        },
+        "sensitivity": {
+          "sweeps": [
+            "delay_offset",
+            "source_bearing",
+            "source_shift",
+            "snr"
+          ],
+          "delay_offsets_samples": [
+            0.0,
+            0.2,
+            0.5,
+            1.0,
+            2.0,
+            5.0,
+            10.0,
+            30.0
+          ],
+          "bearings_deg": [
+            5.0,
+            15.0,
+            25.0,
+            35.0,
+            45.0,
+            55.0,
+            65.0,
+            75.0,
+            85.0
+          ],
+          "shifts_m": [
+            -0.5,
+            -0.25,
+            -0.1,
+            0.0,
+            0.1,
+            0.25,
+            0.5
+          ],
+          "snr_db": [
+            -5.0,
+            0.0,
+            5.0,
+            10.0,
+            20.0,
+            30.0
+          ],
+          "n_trials": 10
+        },
+        "denoising": {
+          "methods": [
+            "identity",
+            "linear",
+            "pca",
+            "mlp"
+          ],
+          "architectures": [
+            [
+              300,
+              300,
+              300
+            ]
+          ],
+          "activation": "logistic",
+          "n_epochs": 300,
+          "learning_rate": 0.001,
+          "batch_size": 32,
+          "weight_decay": 0.0001,
+          "n_components": 10,
+          "device": "cpu"
+        },
+        "features": {
+          "representation": "decay_curve",
+          "floor_db": -60.0,
+          "max_imfs": 6,
+          "emd_tolerance": 0.3
+        },
+        "model": {
+          "name": "svm",
+          "svm_c": 10.0,
+          "svm_gamma": "scale",
+          "n_neighbors": 5,
+          "tree_max_depth": null,
+          "template_tolerance_taps": 2.0,
+          "template_min_score": 0.7
+        },
+        "evaluation": {
+          "n_splits": 5,
+          "positive_class": "large"
+        },
+        "output": {
+          "root": "outputs",
+          "figure_format": "png",
+          "dpi": 150
+        }
+      }
+    }
+  },
+  "plans": {
+    "E1": {
+      "jobs": 500,
+      "conditions": [
+        "main"
+      ],
+      "methods": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M7"
+      ],
+      "method_runs": 3200,
+      "jobs_sha256": "408a66354a8d30ba6e2f8d890b3f9ee26f33a15bc20f58eb34a5626f3c366c55"
+    },
+    "E1t": {
+      "jobs": 20,
+      "conditions": [
+        "timing"
+      ],
+      "methods": [
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "method_runs": 60,
+      "jobs_sha256": "044bea48a9cc71080be87af6b6cc9e7d3cb21a012277069bec9b635425c614cc"
+    },
+    "E1b": {
+      "jobs": 100,
+      "conditions": [
+        "sim_order_1"
+      ],
+      "methods": [
+        "M1",
+        "M4",
+        "M5"
+      ],
+      "method_runs": 300,
+      "jobs_sha256": "459adb3c4d6fde574747b490413f456430d68976b73fe6dfa2358ae98cb4fdb4"
+    },
+    "E2": {
+      "jobs": 200,
+      "conditions": [
+        "main"
+      ],
+      "methods": [
+        "M1",
+        "M2",
+        "M6",
+        "M7"
+      ],
+      "method_runs": 700,
+      "jobs_sha256": "f04734c099d963db85466fc2867e9fa1127449b119dfb2b1766ef9c46217b73a"
+    },
+    "E3": {
+      "jobs": 500,
+      "conditions": [
+        "snr_0dB",
+        "snr_10dB",
+        "snr_20dB",
+        "snr_30dB",
+        "snr_40dB"
+      ],
+      "methods": [
+        "M1",
+        "M5"
+      ],
+      "method_runs": 1000,
+      "jobs_sha256": "39f25d714083f8876479425433f438f41b9741fdbde21406531f104a29e0cec2"
+    },
+    "E4": {
+      "jobs": 500,
+      "conditions": [
+        "latency_0ms",
+        "latency_10ms",
+        "latency_150ms",
+        "latency_20ms",
+        "latency_40ms"
+      ],
+      "methods": [
+        "M1",
+        "M2"
+      ],
+      "method_runs": 1000,
+      "jobs_sha256": "db0a67d27b0dba3508390968e88ef241242d1701fe3f8768b56f9af261dcd690"
+    },
+    "E5": {
+      "jobs": 700,
+      "conditions": [
+        "R1_wall_reflection",
+        "R2_sim_order_8",
+        "R3_speed_15C",
+        "R3_speed_30C",
+        "R4_spurious_pulses",
+        "R5_skew_100ppm",
+        "R5_skew_20ppm"
+      ],
+      "methods": [
+        "M1"
+      ],
+      "method_runs": 700,
+      "jobs_sha256": "0c2350ca05a1679af623ae30050b6de6ac6c8895c2b2a26e0867c754a107fc7a"
+    },
+    "E6": {
+      "jobs": 200,
+      "conditions": [
+        "main"
+      ],
+      "methods": [
+        "A1_no_missed_term",
+        "A2_single_chain",
+        "A3_no_polish",
+        "A4_no_rescan",
+        "A5_image_groups_only",
+        "A6_axis_scan_only"
+      ],
+      "method_runs": 1200,
+      "jobs_sha256": "e82a5275be433a081382a4ab4e6cb3b1ce435e7ffe24da0b66068a4844845ad7"
+    },
+    "E9": {
+      "jobs": 400,
+      "conditions": [
+        "D1_small",
+        "D2_large",
+        "D3_far_source",
+        "D4_mic_near_wall"
+      ],
+      "methods": [
+        "M1"
+      ],
+      "method_runs": 400,
+      "jobs_sha256": "24707129efcb6075e659189e254409c956ad30592fa451b7849ff9961693aa4c"
+    }
+  },
+  "e10": {
+    "dataset": "dEchorate v2.0 (Di Carlo et al., 2021), Zenodo 10.5281/zenodo.6576203, CC BY 4.0",
+    "files": {
+      "dEchorate_database.csv": {
+        "bytes": 2931172
+      },
+      "dEchorate_echo_notes.pkl": {
+        "bytes": 21267,
+        "use": "never loaded"
+      },
+      "main_geometry_from_echo_calibration.py": {
+        "bytes": 13150,
+        "use": "read as text, never executed"
+      },
+      "dEchorate_rirs_gzip7.hdf5": {
+        "bytes": 4192401641,
+        "md5": "8b42a0e99766acce8a100130774bd5b3"
+      }
+    },
+    "room_m": [
+      5.705,
+      5.965,
+      2.355
+    ],
+    "speed_of_sound": {
+      "formula": "331.3 + 0.606 * T",
+      "temperature_c": 24.0,
+      "m_s": 345.844
+    },
+    "subset": {
+      "src_signal": "chirp",
+      "room_codes_primary": [
+        "000000",
+        "000001",
+        "000010",
+        "000100",
+        "001000",
+        "010000",
+        "011000",
+        "011100",
+        "011110",
+        "011111"
+      ],
+      "room_codes_secondary": [
+        "020002"
+      ],
+      "room_code_digits": "floor, ceiling, west, south, east, north (1 = reflective)",
+      "sources": {
+        "directional_to_room": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "directional_to_wall": [
+          4,
+          5
+        ],
+        "omnidirectional_uncalibrated": [
+          6,
+          7,
+          8
+        ]
+      },
+      "microphones": [
+        2,
+        7,
+        12,
+        17,
+        22,
+        27
+      ],
+      "n_rirs": {
+        "primary": 540,
+        "secondary": 54,
+        "total": 594
+      },
+      "order": "room code as listed (primary, then secondary), source 0-8, microphone as listed"
+    },
+    "truth": "room, microphone and directional-source positions as calibrated in main_geometry_from_echo_calibration.py; sources 6-8 use the script's uncalibrated positions, so their position and bearing errors are reported apart from the main results",
+    "latency": {
+      "artificial_ms": "uniform(0, 20), rounded to 0.001 ms, applied as round(ms * 48) whole samples",
+      "seed": "np.random.SeedSequence([20261024, sum(map(ord, 'E10'))]).spawn(594), one child per RIR in subset order",
+      "onset_check": "before any inversion and without the artificial shift: offset = time of max |h| minus calibrated direct distance / c, over sources 0-3, the 10 primary codes and the 6 microphones (240 RIRs); if |median| exceeds one sample it is reported and added to the true latency"
+    },
+    "response": "the dataset RIR at 48 kHz with the artificial shift prepended, truncated to 4800 + max(0, round(48 * median onset offset in ms)) taps so that the window after the emission matches E2; no other processing",
+    "methods": [
+      "M1",
+      "M2",
+      "M7"
+    ],
+    "m7_labels": "image arrivals of the calibrated geometry at c above, max order 5 per axis, same assignment rule as in simulation",
+    "config_overrides": {
+      "acoustics.speed_of_sound_m_s": 345.844,
+      "acoustics.temperature_c": null
+    },
+    "metrics": "sorted-side error, success < 5 cm (10 and 15 cm as secondary results if the truth uncertainty exceeds 5 cm), latency error, bearing error (sources 0-5 only), reliable-flag precision and failure detection; grouped by room code, number of reflective surfaces and source type",
+    "rule": "no parameter is changed after any dEchorate RIR is read; needed changes go to the discussion only",
+    "files_checked_at_freeze": {
+      "dEchorate_database.csv": {
+        "bytes": 2931172,
+        "md5": "bace3f91e10a2f8a36da73bb92548d29"
+      },
+      "dEchorate_echo_notes.pkl": {
+        "bytes": 21267,
+        "md5": "343e8ac8ece565f3c6e6736f1dcb109d"
+      },
+      "main_geometry_from_echo_calibration.py": {
+        "bytes": 13150,
+        "md5": "ae3cec97324db6e7edae9e133ea5f8ee"
+      }
+    }
+  }
+}

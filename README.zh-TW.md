@@ -8,7 +8,7 @@
 
 從單一麥克風錄到的回音反推房間大小與聲源距離，主要用到鏡像源法（image-source method）與適應性濾波（adaptive filtering）。
 
-量測檔是兩聲道 WAV：一個聲道是播放出去的激勵訊號，另一個是麥克風錄音。我先用 NLMS 適應性濾波器從這兩個聲道辨識出房間脈衝響應（room impulse response, RIR），取最強的幾個回音換算成距離，再依矩形房間的一階鏡像源模型，以閉式解反推房間長寬、聲源距離與麥克風位置。候選解不只一組，所以每一組都重新合成脈衝響應，跟辨識結果比對後排序。錄音的時間原點不確定、或量不到聲源方位角的時候，我另外寫了第二種反解：把整個鏡像源晶格拿去擬合撿到的每一個回音，播放延遲與方位角跟房間一起估出來，也能處理三維房間（實驗性），並回報標準誤差，以及這次擬合可不可信。同一批脈衝響應也拿來訓練「大房間／小房間」分類器（以房間分組做交叉驗證）、比較去噪方法，另外對時間偏移、聲源方位角、聲源位置與雜訊做了敏感度分析。Python 套件叫 `echo_lattice`，命令列工具是 `echo-lattice`。
+量測檔是兩聲道 WAV：一個聲道是播放出去的激勵訊號，另一個是麥克風錄音。我先用 NLMS 適應性濾波器從這兩個聲道辨識出房間脈衝響應（room impulse response, RIR），取最強的幾個回音換算成距離，再依矩形房間的一階鏡像源模型，以閉式解反推房間長寬、聲源距離與麥克風位置。候選解不只一組，所以每一組都重新合成脈衝響應，跟辨識結果比對後排序。錄音的時間原點不確定、或量不到聲源方位角的時候，我另外寫了第二種反解：把整個鏡像源晶格拿去擬合撿到的每一個回音，播放延遲與方位角跟房間一起估出來，也能處理三維房間（實驗性），並回報標準誤差，以及這次擬合可不可信。同一批脈衝響應也拿來訓練「大房間／小房間」分類器（以房間分組做交叉驗證）、比較去噪方法，另外對時間偏移、聲源方位角、聲源位置與雜訊做了敏感度分析。Python 套件叫 `echo_lattice`，命令列工具是 `echo-lattice`。晶格反解的論文放在 [`paper/`](paper/)，各實驗的腳本在 [`experiments/`](experiments/)：這個方法在模擬房間上可行，在公開資料集 dEchorate 的 540 筆量測響應上全部失敗（見[已知限制](#已知限制)）。
 
 作者：RL
 
@@ -497,6 +497,8 @@ echo-lattice/
 │   ├── compare_rir_denoisers.py         # 去噪器比較
 │   ├── compare_feature_representations.py  # 特徵 × 分類器比較
 │   └── benchmark_lattice_inversion.py   # 隨機房間上的晶格反解與一階反解比較
+├── experiments/                         # 論文各實驗的腳本與 freeze.json（見 experiments/README.zh-TW.md）
+├── paper/                               # 晶格反解的論文，繁體中文與英文（CC BY 4.0）
 ├── src/
 │   └── echo_lattice/
 │       ├── __init__.py                  # 公開 API
@@ -778,6 +780,8 @@ python examples/benchmark_lattice_inversion.py --dims 3 --scenes 20 --out exampl
 
 延遲與方位角誤差是 5 cm 以內那些擬合的中位數，三維的尺寸誤差也一樣只算這些擬合。平面時，晶格反解在 40 個場景中有 39 個同時找回房間、延遲與方位角，標為可靠的 39 個答案全部正確。三維時 20 個房間對了 11 個（其中 1 個場景完全找不到假設）；9 個錯誤全部被標為不可靠，所以標為可靠的答案都是對的。
 
+量測響應就是另一回事了。在 [`paper/`](paper/) 的論文中，我以凍結的設定在公開資料集 dEchorate 的 540 筆響應上執行（一間 5.705 × 5.965 × 2.355 m 的房間、10 種牆面設定）：不論延遲是估計的還是給定的，沒有一個擬合在 5 cm 以內，可靠度旗標也拒絕了每一個擬合，包括給定回音標記時落在 5 cm 以內的 162 個。在那次執行沒有用到的麥克風上做的診斷說明了原因：這間房間的單一響應裡，只有天花板回音落在校準幾何預測的位置（偏差中位數 −0.4 cm）；決定兩個水平邊長的側牆回音，離預測時間並不比隨機時間更近；37 種撿峰設定撿到鏡像到達的比例也都不比隨機高。
+
 ### 敏感度
 
 預設的 `room` 場景。
@@ -827,7 +831,8 @@ echo-lattice denoise --dataset data/noisy/dataset.csv --set synthetic.snr_db=5 -
 - NLMS 在有色、非平穩的激勵下收斂很慢，1–2 秒的類語音激勵辨識不出可用的響應；請用白雜訊或粉紅雜訊，或延長量測、換成 `least_squares`。
 - 0 dB 以下時回音擷取會把雜訊峰當成回音，一階反解結果完全錯誤，卻仍回報「有解」，要以殘差與 `tap_match` 分數判斷可信度。晶格反解改為回報 `reliable`，在結果一節的模擬房間中（含三維），12 個錯誤擬合全部被它標出來。
 - 三維的晶格反解還在實驗階段：48 kHz、120 個回音時，20 個隨機房間對了 11 個。這次沒有任何錯誤擬合被當成可靠，不過 20 個房間的樣本並不大。16 kHz 時撿到的回音在遠牆到達前就結束了，三維搜尋會失敗；請用 48 kHz，`lattice.max_echoes` 設 100 以上。
-- `reliable` 的門檻與偵測模型（`lattice.reflection`、`lattice.clutter`）是在模擬房間上調的，模擬的回音是乾淨的脈衝。真實喇叭會拖尾、牆面會散射、吸音隨頻率改變，信任這個旗標之前，請先在幾個自己量過的房間上檢查。
+- `reliable` 的門檻與偵測模型（`lattice.reflection`、`lattice.clutter`）是在模擬房間上調的，模擬的回音是乾淨的脈衝。真實喇叭會拖尾、牆面會散射、吸音隨頻率改變，信任這個旗標之前，請先在幾個自己量過的房間上檢查。在 dEchorate 的量測響應上，它拒絕了每一個擬合，連給定回音標記時正確的擬合也一樣，所以在量測響應上它目前還分不出對錯。
+- 晶格反解還沒有在量測響應上成功過。在 dEchorate（一間房間的 540 筆響應）上，它沒有找到任何 5 cm 以內的房間。論文第 5.7 節的診斷顯示，這間房間的單一響應中，側牆回音和隨機時間分不開，我試過的撿峰方法也都沒有改變這一點。它大概需要側牆回音清楚可辨的錄音，例如在較空的房間用全向聲源、並獨立量測幾何，或改用多個位置的響應。
 - 晶格反解每筆響應要幾秒（我的電腦上二維 16 kHz 約 4.7 s，三維 48 kHz 約 5.6 s），閉式解只要幾毫秒。
 - 在這裡的合成資料上，PCA 與自編碼器去噪在沒看過的房間上比不處理還差；學習式去噪要推廣到新房間，需要大量、多樣的訓練房間。
 - 模擬、NLMS 辨識、回音反解、敏感度分析與 scikit-learn 分類器都只用 CPU，48 段 2 秒量測的 `prepare` 約 6 秒。用得到 GPU 的只有真實規模的 `deep_autoencoder`：照數千筆、每筆 1600 taps、`[[800, 800, 800]]` 的網路訓練數百個回合估算，CPU 要數十分鐘到數小時，4 GB 以上記憶體的 CUDA GPU 幾分鐘就夠，用 `--set denoising.device=cuda` 開啟。測試與範例用的都是 CPU 上幾秒內跑完的小網路。
@@ -918,6 +923,7 @@ python -c "import ast,pathlib; [ast.parse(p.read_text(encoding='utf-8'), str(p),
 - A. F. Genovese, H. Gamper, V. Pulkki, N. Raghuvanshi, and I. J. Tashev, "Blind room volume estimation from single-channel noisy speech," in *Proc. IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)*, 2019, pp. 231–235.
 - A. H. Moore, M. Brookes, and P. A. Naylor, "Room geometry estimation from a single channel acoustic impulse response," in *Proc. 21st European Signal Processing Conference (EUSIPCO)*, 2013, pp. 1–5.
 - W. Yu and W. B. Kleijn, "Estimation of source and receiver positions, room geometry and reflection coefficients from a single room impulse response," arXiv:2301.09198, 2023.
+- D. Di Carlo, P. Tandeitnik, C. Foy, N. Bertin, A. Deleforge, and S. Gannot, "dEchorate: A calibrated room impulse response dataset for echo-aware signal processing," *EURASIP Journal on Audio, Speech, and Music Processing*, vol. 2021, Art. no. 39, 2021, doi: 10.1186/s13636-021-00229-0.
 
 ### Point processes and fitting
 
@@ -954,5 +960,7 @@ python -c "import ast,pathlib; [ast.parse(p.read_text(encoding='utf-8'), str(p),
 ---
 
 ## License
+
+[`paper/`](paper/) 的論文以 CC BY 4.0 授權。
 
 MIT License，Copyright (c) RL。詳見 [LICENSE](LICENSE)。

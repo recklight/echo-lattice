@@ -8,7 +8,7 @@ English | [繁體中文](README.zh-TW.md)
 
 Infers the size of a room and the distance to the sound source from the echoes a single microphone records, mainly with the image-source method and adaptive filtering.
 
-A measurement is a two-channel WAV file: one channel holds the excitation sent to the loudspeaker, the other the microphone recording. I first identify the room impulse response (RIR) from the two channels with an NLMS adaptive filter and convert the strongest echoes to distances. A first-order image-source model of a rectangular room then gives the room's width and depth, the source distance and the microphone position in closed form. There is more than one candidate solution, so each one is resynthesized as an impulse response and ranked by how well it matches the identified one. For recordings whose time origin is unknown, or whose source bearing I cannot measure, I wrote a second inversion that fits the whole image-source lattice to every echo it picks: it estimates the playback latency and the bearing along with the room, works on 3-D rooms as well (experimentally), and reports standard errors and whether the fit can be trusted. I also use the same impulse responses to train a large-room/small-room classifier (cross-validated with the recordings grouped by room) and to compare denoising methods, and I run a sensitivity analysis on timing offset, source bearing, source position and noise. The Python package is `echo_lattice` and the command-line tool is `echo-lattice`.
+A measurement is a two-channel WAV file: one channel holds the excitation sent to the loudspeaker, the other the microphone recording. I first identify the room impulse response (RIR) from the two channels with an NLMS adaptive filter and convert the strongest echoes to distances. A first-order image-source model of a rectangular room then gives the room's width and depth, the source distance and the microphone position in closed form. There is more than one candidate solution, so each one is resynthesized as an impulse response and ranked by how well it matches the identified one. For recordings whose time origin is unknown, or whose source bearing I cannot measure, I wrote a second inversion that fits the whole image-source lattice to every echo it picks: it estimates the playback latency and the bearing along with the room, works on 3-D rooms as well (experimentally), and reports standard errors and whether the fit can be trusted. I also use the same impulse responses to train a large-room/small-room classifier (cross-validated with the recordings grouped by room) and to compare denoising methods, and I run a sensitivity analysis on timing offset, source bearing, source position and noise. The Python package is `echo_lattice` and the command-line tool is `echo-lattice`. A paper on the lattice inversion is in [`paper/`](paper/), with the scripts of its experiments in [`experiments/`](experiments/): the method works on simulated rooms and failed on all 540 measured responses of the public dEchorate dataset (see [Known limitations](#known-limitations)).
 
 Author: RL
 
@@ -497,6 +497,8 @@ echo-lattice/
 │   ├── compare_rir_denoisers.py         # denoiser comparison
 │   ├── compare_feature_representations.py  # features × classifiers comparison
 │   └── benchmark_lattice_inversion.py   # lattice against first-order inversion on random rooms
+├── experiments/                         # scripts of the paper's experiments and freeze.json (see experiments/README.md)
+├── paper/                               # the paper on the lattice inversion, in Traditional Chinese and English (CC BY 4.0)
 ├── src/
 │   └── echo_lattice/
 │       ├── __init__.py                  # public API
@@ -778,6 +780,8 @@ python examples/benchmark_lattice_inversion.py --dims 3 --scenes 20 --out exampl
 
 The latency and bearing errors are medians over the fits within 5 cm, and the 3-D size error is the median over those fits as well. In the plane the lattice inversion recovers the room, the latency and the bearing in 39 of 40 scenes, and all 39 answers it called reliable are right. In 3-D it is right in 11 of 20 rooms (one scene found no hypothesis at all); all 9 misses are flagged as unreliable, so every answer it called reliable is right.
 
+Measured responses are another story. In the paper in [`paper/`](paper/) I ran the frozen settings on 540 responses of the public dEchorate dataset (one room of 5.705 × 5.965 × 2.355 m in 10 wall configurations): no fit came within 5 cm, whether the latency was estimated or given, and the flag rejected every fit, including the 162 that came within 5 cm when the echo labels were given. A diagnosis on microphones that run did not use shows why. In a single response of that room only the ceiling echo lands where the calibrated geometry puts it (median offset −0.4 cm); the side-wall echoes that fix the two horizontal sides are no closer to their predicted times than random times are, and none of 37 peak-picker settings finds image arrivals more often than chance.
+
 ### Sensitivity
 
 The default `room` scene.
@@ -827,7 +831,8 @@ On unseen rooms only the global linear correction, which pushes the noise floor 
 - NLMS converges very slowly on colored, non-stationary excitation, and 1–2 s of speech-like excitation does not identify a usable response. Use white or pink noise, record longer, or switch to `least_squares`.
 - At 0 dB and below, echo picking takes noise peaks for echoes and the first-order inversion is completely wrong, yet it still reports a solution; judge how far to trust it from the residual and the `tap_match` score. The lattice inversion reports `reliable` instead, which flagged all 12 wrong fits in the simulated rooms of the results, 3-D included.
 - The 3-D lattice inversion is experimental: it was right in 11 of 20 random rooms at 48 kHz with 120 echoes. None of its wrong fits came out as reliable in that run, but 20 rooms are a small sample. At 16 kHz the picked echoes end before the far walls arrive and the 3-D search fails; use 48 kHz and `lattice.max_echoes` of 100 or more.
-- The `reliable` thresholds and the detection model (`lattice.reflection`, `lattice.clutter`) were tuned on simulated rooms, whose echoes are clean impulses. A real loudspeaker rings, real walls scatter and absorption depends on frequency, so check the flag on a few rooms you have measured before trusting it.
+- The `reliable` thresholds and the detection model (`lattice.reflection`, `lattice.clutter`) were tuned on simulated rooms, whose echoes are clean impulses. A real loudspeaker rings, real walls scatter and absorption depends on frequency, so check the flag on a few rooms you have measured before trusting it. On the measured dEchorate responses it rejected every fit, including the ones that were right when the echo labels were given, so on measured responses it tells nothing apart yet.
+- The lattice inversion has not worked on a measured response yet. On dEchorate (540 responses of one room) it found no room within 5 cm. The diagnosis in the paper (section 5.7) shows that in a single response of that room the side-wall echoes cannot be told apart from random times, and none of the peak pickers I tried changed that. It probably needs recordings in which those echoes stand out, for example an omnidirectional source in an emptier room with independently measured geometry, or responses from several positions.
 - The lattice inversion takes seconds per response (about 4.7 s in 2-D at 16 kHz and 5.6 s in 3-D at 48 kHz on my machine), where the closed form takes milliseconds.
 - On the synthetic data here, PCA and autoencoder denoising do worse on unseen rooms than no processing. For learned denoising to generalize to new rooms, it needs many training rooms of varied geometry.
 - Simulation, NLMS identification, echo inversion, sensitivity analysis and the scikit-learn classifiers all run on the CPU only; `prepare` on 48 measurements of 2 s takes about 6 s. The only thing that benefits from a GPU is a full-scale `deep_autoencoder`. For thousands of responses of 1600 taps each and a `[[800, 800, 800]]` network trained for a few hundred epochs, I estimate tens of minutes to hours on the CPU, while a CUDA GPU with 4 GB of memory or more needs a few minutes; turn it on with `--set denoising.device=cuda`. The tests and examples use small networks that finish in seconds on the CPU.
@@ -918,6 +923,7 @@ python -c "import ast,pathlib; [ast.parse(p.read_text(encoding='utf-8'), str(p),
 - A. F. Genovese, H. Gamper, V. Pulkki, N. Raghuvanshi, and I. J. Tashev, "Blind room volume estimation from single-channel noisy speech," in *Proc. IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)*, 2019, pp. 231–235.
 - A. H. Moore, M. Brookes, and P. A. Naylor, "Room geometry estimation from a single channel acoustic impulse response," in *Proc. 21st European Signal Processing Conference (EUSIPCO)*, 2013, pp. 1–5.
 - W. Yu and W. B. Kleijn, "Estimation of source and receiver positions, room geometry and reflection coefficients from a single room impulse response," arXiv:2301.09198, 2023.
+- D. Di Carlo, P. Tandeitnik, C. Foy, N. Bertin, A. Deleforge, and S. Gannot, "dEchorate: A calibrated room impulse response dataset for echo-aware signal processing," *EURASIP Journal on Audio, Speech, and Music Processing*, vol. 2021, Art. no. 39, 2021, doi: 10.1186/s13636-021-00229-0.
 
 ### Point processes and fitting
 
@@ -954,5 +960,7 @@ python -c "import ast,pathlib; [ast.parse(p.read_text(encoding='utf-8'), str(p),
 ---
 
 ## License
+
+The paper in [`paper/`](paper/) is licensed under CC BY 4.0.
 
 MIT License, Copyright (c) RL. See [LICENSE](LICENSE).
